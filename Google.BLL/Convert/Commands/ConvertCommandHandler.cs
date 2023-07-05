@@ -46,15 +46,15 @@ namespace Google.BLL.Convert.Commands
                 var exportRequest = service.Files.Export(convertedFileId, "application/pdf");
                 var streamResponse = exportRequest.ExecuteAsStream();
 
-                var PdfFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                var pdfFilePath = Path.Combine(PdfFolderPath, Path.GetFileNameWithoutExtension(command.OriginalFile.FileName) + ".pdf");
+                var outputFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                var outputFilePath = Path.Combine(outputFolderPath, Path.GetFileNameWithoutExtension(command.OriginalFile.FileName) + ".pdf");
 
-                using (var outputStream = new FileStream(pdfFilePath, FileMode.Create))
+                using (var outputStream = new FileStream(outputFilePath, FileMode.Create))
                 {
                     streamResponse.CopyTo(outputStream);
                 }
 
-                return new ConvertResult() { PdfFilePath = pdfFilePath };
+                return new ConvertResult() { PdfFilePath = outputFilePath };
             }
             else
             {
