@@ -27,12 +27,12 @@ namespace Google.BLL.Convert.Commands
 
             var fileMetadata = new Apis.Drive.v3.Data.File()
             {
-                Name = Path.GetFileName(command.OriginalFilePath),
+                Name = Path.GetFileName(command.OriginalFile.FileName),
                 MimeType = "application/vnd.google-apps.document"
             };
 
             FilesResource.CreateMediaUpload request;
-            using (var stream = new FileStream(command.OriginalFilePath, FileMode.Open))
+            using (var stream = command.OriginalFile.OpenReadStream())
             {
                 request = service.Files.Create(fileMetadata, stream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
                 request.Fields = "id";
@@ -46,7 +46,8 @@ namespace Google.BLL.Convert.Commands
                 var exportRequest = service.Files.Export(convertedFileId, "application/pdf");
                 var streamResponse = exportRequest.ExecuteAsStream();
 
-                var pdfFilePath = Path.ChangeExtension(command.OriginalFilePath, ".pdf");
+                var PdfFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                var pdfFilePath = Path.Combine(PdfFolderPath, Path.GetFileNameWithoutExtension(command.OriginalFile.FileName) + ".pdf");
 
                 using (var outputStream = new FileStream(pdfFilePath, FileMode.Create))
                 {
