@@ -9,11 +9,9 @@ namespace Google.BLL.Convert.Commands
     public class ConvertCommandHandler : IRequestHandler<ConvertCommand, ConvertResult>
     {
         private readonly string serviceAccountKeyPath = @"C:\Users\polin\Just_all\Work\Ilya\DocsConverting\SecurityKey.json";
-        private readonly string outputDirectory = @"C:\Users\polin\Just_all\Work\Ilya\DocsConverting\Testing\Files\";
 
         public async Task<ConvertResult> Handle(ConvertCommand command, CancellationToken cancellationToken)
         {
-            // Загрузка учетных данных службы
             GoogleCredential credential;
             using (var stream = new FileStream(serviceAccountKeyPath, FileMode.Open, FileAccess.Read))
             {
@@ -21,44 +19,41 @@ namespace Google.BLL.Convert.Commands
                     .CreateScoped(DriveService.ScopeConstants.Drive);
             }
 
-            // Инициализация службы Google Drive
             var service = new DriveService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = credential,
                 ApplicationName = "Converter"
             });
 
-            // Загрузка исходного файла с локального компьютера
             var fileMetadata = new Apis.Drive.v3.Data.File()
             {
-                Name = Path.GetFileNameWithoutExtension(command.OriginalFilePath) + ".pdf",
-                MimeType = "application/pdf"
+                Name = Path.GetFileName(command.OriginalFilePath),
+                MimeType = "application/vnd.google-apps.document"
             };
 
-
-            // Конвертация файла в формате .doc в .pdf
             FilesResource.CreateMediaUpload request;
             using (var stream = new FileStream(command.OriginalFilePath, FileMode.Open))
             {
                 request = service.Files.Create(fileMetadata, stream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
                 request.Fields = "id";
-                await request.UploadAsync();
+                request.Upload();
             }
 
             var convertedFileId = request.ResponseBody?.Id;
 
             if (convertedFileId != null)
             {
-                var outputFileName = fileMetadata.Name;
-                var outputFilePath = Path.Combine(outputDirectory, outputFileName);
+                var exportRequest = service.Files.Export(convertedFileId, "application/pdf");
+                var streamResponse = exportRequest.ExecuteAsStream();
 
-                using (var stream = new FileStream(outputFilePath, FileMode.Create))
+                var pdfFilePath = Path.ChangeExtension(command.OriginalFilePath, ".pdf");
+
+                using (var outputStream = new FileStream(pdfFilePath, FileMode.Create))
                 {
-                    service.Files.Export(convertedFileId, "application/pdf")
-                        .Download(stream);
+                    streamResponse.CopyTo(outputStream);
                 }
 
-                return new ConvertResult() { PdfFilePath = outputFilePath };
+                return new ConvertResult() { PdfFilePath = pdfFilePath };
             }
             else
             {
