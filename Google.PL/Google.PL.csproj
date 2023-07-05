@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Google.BLL\Google.BLL.csproj" />
+    <ProjectReference Include="..\Utils.Constants\Utils.Constants.csproj" />
   </ItemGroup>
 
 </Project>

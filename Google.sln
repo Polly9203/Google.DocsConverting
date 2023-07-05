@@ -8,7 +8,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Google.PL", "Google.PL\Goog
 		{B5B05AC1-13D7-4C71-9497-A78648094D10} = {B5B05AC1-13D7-4C71-9497-A78648094D10}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Google.BLL", "Google.BLL\Google.BLL.csproj", "{B5B05AC1-13D7-4C71-9497-A78648094D10}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Google.BLL", "Google.BLL\Google.BLL.csproj", "{B5B05AC1-13D7-4C71-9497-A78648094D10}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B34F47EA-5A62-4E2D-9871-B459746B033F} = {B34F47EA-5A62-4E2D-9871-B459746B033F}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utils", "Utils", "{88E9A9ED-0E2B-4CFF-B3B4-60F1AD77AE76}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utils.Constants", "Utils.Constants\Utils.Constants.csproj", "{B34F47EA-5A62-4E2D-9871-B459746B033F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,9 +31,16 @@ Global
 		{B5B05AC1-13D7-4C71-9497-A78648094D10}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B5B05AC1-13D7-4C71-9497-A78648094D10}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B5B05AC1-13D7-4C71-9497-A78648094D10}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B34F47EA-5A62-4E2D-9871-B459746B033F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B34F47EA-5A62-4E2D-9871-B459746B033F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B34F47EA-5A62-4E2D-9871-B459746B033F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B34F47EA-5A62-4E2D-9871-B459746B033F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B34F47EA-5A62-4E2D-9871-B459746B033F} = {88E9A9ED-0E2B-4CFF-B3B4-60F1AD77AE76}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E1C06AB2-6EEA-4761-867C-25BD021FFB81}

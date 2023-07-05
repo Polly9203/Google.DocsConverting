@@ -1,4 +1,5 @@
 using Google.BLL;
+using Utils.Constants.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +8,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddGoogleBll();
 builder.Services.AddSwaggerGen();
+
+builder.Services.Configure<FileConfiguration>(builder.Configuration.GetSection("FileConfiguration"));
+builder.Services.Configure<GoogleConfiguration>(builder.Configuration.GetSection("GoogleConfiguration"));
 
 var app = builder.Build();
 
