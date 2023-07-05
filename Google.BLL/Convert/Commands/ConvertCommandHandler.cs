@@ -1,7 +1,6 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
-using Google.Apis.Util.Store;
 using Google.BLL.Convert.Models;
 using MediatR;
 
@@ -9,33 +8,23 @@ namespace Google.BLL.Convert.Commands
 {
     public class ConvertCommandHandler : IRequestHandler<ConvertCommand, ConvertResult>
     {
-        private static string[] Scopes = { DriveService.Scope.Drive };
-        private static string ApplicationName = "Converter";
+        private readonly string serviceAccountKeyPath = @"C:\Users\polin\Just_all\Work\Ilya\DocsConverting\SecurityKey.json";
 
         public async Task<ConvertResult> Handle(ConvertCommand command, CancellationToken cancellationToken)
         {
-            UserCredential credential;
-
-            using (var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
+            GoogleCredential credential;
+            using (var stream = new FileStream(serviceAccountKeyPath, FileMode.Open, FileAccess.Read))
             {
-                string credPath = "token.json";
-                credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-                    GoogleClientSecrets.FromStream(stream).Secrets,
-                    Scopes,
-                    "Web client 1",
-                    CancellationToken.None,
-                    new FileDataStore(credPath, true)).Result;
-                Console.WriteLine("Credential file saved to: " + credPath);
+                credential = GoogleCredential.FromStream(stream)
+                    .CreateScoped(DriveService.ScopeConstants.Drive);
             }
 
-            // Create Drive API service
             var service = new DriveService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = credential,
-                ApplicationName = ApplicationName,
+                ApplicationName = "Converter"
             });
 
-            // Upload the doc file to Google Drive
             var fileMetadata = new Apis.Drive.v3.Data.File()
             {
                 Name = Path.GetFileName(command.OriginalFilePath),
@@ -50,19 +39,26 @@ namespace Google.BLL.Convert.Commands
                 request.Upload();
             }
 
-            var uploadedFile = request.ResponseBody;
+            var convertedFileId = request.ResponseBody?.Id;
 
-            // Convert the doc file to pdf
-            var exportRequest = service.Files.Export(uploadedFile.Id, "application/pdf");
-            var streamResponse = exportRequest.ExecuteAsStream();
-
-            var pdfFilePath = Path.ChangeExtension(command.OriginalFilePath, ".pdf");
-            using (var outputStream = new FileStream(pdfFilePath, FileMode.Create))
+            if (convertedFileId != null)
             {
-                streamResponse.CopyTo(outputStream);
-            }
+                var exportRequest = service.Files.Export(convertedFileId, "application/pdf");
+                var streamResponse = exportRequest.ExecuteAsStream();
 
-            return new ConvertResult() {PdfFilePath = pdfFilePath};
+                var pdfFilePath = Path.ChangeExtension(command.OriginalFilePath, ".pdf");
+
+                using (var outputStream = new FileStream(pdfFilePath, FileMode.Create))
+                {
+                    streamResponse.CopyTo(outputStream);
+                }
+
+                return new ConvertResult() { PdfFilePath = pdfFilePath };
+            }
+            else
+            {
+                return new ConvertResult() { PdfFilePath = "Failed" };
+            }
         }
     }
 }
