@@ -1,7 +1,6 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
-using Google.Apis.Util.Store;
 using Google.BLL.Convert.Models;
 using MediatR;
 
@@ -9,60 +8,62 @@ namespace Google.BLL.Convert.Commands
 {
     public class ConvertCommandHandler : IRequestHandler<ConvertCommand, ConvertResult>
     {
-        private static string[] Scopes = { DriveService.Scope.Drive };
-        private static string ApplicationName = "Converter";
+        private readonly string serviceAccountKeyPath = @"C:\Users\polin\Just_all\Work\Ilya\DocsConverting\SecurityKey.json";
+        private readonly string outputDirectory = @"C:\Users\polin\Just_all\Work\Ilya\DocsConverting\Testing\Files\";
 
         public async Task<ConvertResult> Handle(ConvertCommand command, CancellationToken cancellationToken)
         {
-            UserCredential credential;
-
-            using (var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
+            // Загрузка учетных данных службы
+            GoogleCredential credential;
+            using (var stream = new FileStream(serviceAccountKeyPath, FileMode.Open, FileAccess.Read))
             {
-                string credPath = "token.json";
-                credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-                    GoogleClientSecrets.FromStream(stream).Secrets,
-                    Scopes,
-                    "Web client 1",
-                    CancellationToken.None,
-                    new FileDataStore(credPath, true)).Result;
-                Console.WriteLine("Credential file saved to: " + credPath);
+                credential = GoogleCredential.FromStream(stream)
+                    .CreateScoped(DriveService.ScopeConstants.Drive);
             }
 
-            // Create Drive API service
+            // Инициализация службы Google Drive
             var service = new DriveService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = credential,
-                ApplicationName = ApplicationName,
+                ApplicationName = "Converter"
             });
 
-            // Upload the doc file to Google Drive
+            // Загрузка исходного файла с локального компьютера
             var fileMetadata = new Apis.Drive.v3.Data.File()
             {
-                Name = Path.GetFileName(command.OriginalFilePath),
-                MimeType = "application/vnd.google-apps.document"
+                Name = Path.GetFileNameWithoutExtension(command.OriginalFilePath) + ".pdf",
+                MimeType = "application/pdf"
             };
 
+
+            // Конвертация файла в формате .doc в .pdf
             FilesResource.CreateMediaUpload request;
             using (var stream = new FileStream(command.OriginalFilePath, FileMode.Open))
             {
                 request = service.Files.Create(fileMetadata, stream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
                 request.Fields = "id";
-                request.Upload();
+                await request.UploadAsync();
             }
 
-            var uploadedFile = request.ResponseBody;
+            var convertedFileId = request.ResponseBody?.Id;
 
-            // Convert the doc file to pdf
-            var exportRequest = service.Files.Export(uploadedFile.Id, "application/pdf");
-            var streamResponse = exportRequest.ExecuteAsStream();
-
-            var pdfFilePath = Path.ChangeExtension(command.OriginalFilePath, ".pdf");
-            using (var outputStream = new FileStream(pdfFilePath, FileMode.Create))
+            if (convertedFileId != null)
             {
-                streamResponse.CopyTo(outputStream);
-            }
+                var outputFileName = fileMetadata.Name;
+                var outputFilePath = Path.Combine(outputDirectory, outputFileName);
 
-            return new ConvertResult() {PdfFilePath = pdfFilePath};
+                using (var stream = new FileStream(outputFilePath, FileMode.Create))
+                {
+                    service.Files.Export(convertedFileId, "application/pdf")
+                        .Download(stream);
+                }
+
+                return new ConvertResult() { PdfFilePath = outputFilePath };
+            }
+            else
+            {
+                return new ConvertResult() { PdfFilePath = "Failed" };
+            }
         }
     }
 }
