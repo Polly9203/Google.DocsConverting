@@ -15,8 +15,9 @@ namespace Google.PL.Controllers
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<ConvertResult>> Convert([FromBody] ConvertCommand command)
+        public async Task<ActionResult<ConvertResult>> Convert(IFormFile original_file)
         {
+            var command = new ConvertCommand() { OriginalFile = original_file };
             var result = await Mediator.Send(command);
             return Ok(result);
         }
