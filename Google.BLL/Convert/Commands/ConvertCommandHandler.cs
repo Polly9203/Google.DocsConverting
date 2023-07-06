@@ -1,74 +1,33 @@
-﻿using Google.Apis.Auth.OAuth2;
-using Google.Apis.Drive.v3;
-using Google.Apis.Services;
-using Google.BLL.Convert.Models;
+﻿using Google.BLL.Convert.Models;
+using Google.BLL.Services;
 using MediatR;
-using Microsoft.Extensions.Options;
-using Utils.Constants.Configuration;
 
 namespace Google.BLL.Convert.Commands
 {
     public class ConvertCommandHandler : IRequestHandler<ConvertCommand, ConvertResult>
     {
-        private readonly GoogleConfiguration googleConfiguration;
-        private readonly FileConfiguration fileConfiguration;
+        private readonly IGoogleService _googleService;
+        private readonly IFileService _fileService;
 
-        public ConvertCommandHandler(IOptions<GoogleConfiguration> googleConfiguration, IOptions<FileConfiguration> fileConfiguration)
+        public ConvertCommandHandler(IGoogleService googleService, IFileService fileService)
         {
-            this.googleConfiguration = googleConfiguration.Value;
-            this.fileConfiguration = fileConfiguration.Value;
+            _googleService = googleService;
+            _fileService = fileService;
         }
 
         public async Task<ConvertResult> Handle(ConvertCommand command, CancellationToken cancellationToken)
         {
-            GoogleCredential credential;
-            using (var stream = new FileStream(googleConfiguration.ServiceAccountKeyPath, FileMode.Open, FileAccess.Read))
-            {
-                credential = GoogleCredential.FromStream(stream)
-                    .CreateScoped(DriveService.ScopeConstants.Drive);
-            }
+            var credential = _googleService.CreateCredentials();
 
-            var service = new DriveService(new BaseClientService.Initializer()
-            {
-                HttpClientInitializer = credential,
-                ApplicationName = googleConfiguration.ApplicationName
-            });
+            using var service = _googleService.CreateDriveService(credential);
+            var fileMetadata = _fileService.CreateFileMetadata(command.OriginalFile.FileName);
 
-            var fileMetadata = new Apis.Drive.v3.Data.File()
-            {
-                Name = Path.GetFileName(command.OriginalFile.FileName),
-                MimeType = fileConfiguration.OriginalMimeType
-            };
+            var request = _fileService.UploadFile(service, fileMetadata, command.OriginalFile);
 
-            FilesResource.CreateMediaUpload request;
-            using (var stream = command.OriginalFile.OpenReadStream())
-            {
-                request = service.Files.Create(fileMetadata, stream, fileConfiguration.ContentType);
-                request.Fields = "id";
-                request.Upload();
-            }
+            var exportedStream = await _fileService.ExportFileAsync(service, request.ResponseBody.Id);
+            var outputFilePath = _fileService.SaveFile(exportedStream, command.OriginalFile.FileName);
 
-            var convertedFileId = request.ResponseBody?.Id;
-
-            if (convertedFileId != null)
-            {
-                var exportRequest = service.Files.Export(convertedFileId, fileConfiguration.OutputMimeType);
-                var streamResponse = exportRequest.ExecuteAsStream();
-
-                var outputFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                var outputFilePath = Path.Combine(outputFolderPath, Path.GetFileNameWithoutExtension(command.OriginalFile.FileName) + ".pdf");
-
-                using (var outputStream = new FileStream(outputFilePath, FileMode.Create))
-                {
-                    streamResponse.CopyTo(outputStream);
-                }
-
-                return new ConvertResult() { PdfFilePath = outputFilePath };
-            }
-            else
-            {
-                return new ConvertResult() { PdfFilePath = "Failed" };
-            }
+            return new ConvertResult() { PdfFilePath = outputFilePath };
         }
     }
 }
