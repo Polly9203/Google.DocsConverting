@@ -18,10 +18,9 @@ namespace Google.BLL.Convert.Commands
         public async Task<ConvertResult> Handle(ConvertCommand command, CancellationToken cancellationToken)
         {
             var credential = _googleService.CreateCredentials();
-
             using var service = _googleService.CreateDriveService(credential);
+     
             var fileMetadata = _fileService.CreateFileMetadata(command.OriginalFile.FileName);
-
             var request = _fileService.UploadFile(service, fileMetadata, command.OriginalFile);
 
             var exportedStream = await _fileService.ExportFileAsync(service, request.ResponseBody.Id);
