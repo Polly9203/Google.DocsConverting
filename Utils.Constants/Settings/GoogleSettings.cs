@@ -1,6 +1,6 @@
-﻿namespace Utils.Constants.Configuration
+﻿namespace Utils.Constants.Settings
 {
-    public class GoogleConfiguration
+    public class GoogleSettings
     {
         public string ServiceAccountKeyPath { get; set; }
         public string ApplicationName { get; set; }
