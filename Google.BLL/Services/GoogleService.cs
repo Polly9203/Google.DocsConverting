@@ -17,11 +17,9 @@ namespace Google.BLL.Services
 
         public GoogleCredential CreateCredentials()
         {
-            using (var stream = new FileStream(googleConfiguration.ServiceAccountKeyPath, FileMode.Open, FileAccess.Read))
-            {
-                return GoogleCredential.FromStream(stream)
-                    .CreateScoped(DriveService.ScopeConstants.Drive);
-            }
+            using var stream = new FileStream(googleConfiguration.ServiceAccountKeyPath, FileMode.Open, FileAccess.Read);
+
+            return GoogleCredential.FromStream(stream).CreateScoped(DriveService.ScopeConstants.Drive);
         }
 
         public DriveService CreateDriveService(GoogleCredential credential)

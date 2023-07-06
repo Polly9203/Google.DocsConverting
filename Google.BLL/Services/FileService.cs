@@ -25,19 +25,20 @@ namespace Google.BLL.Services
 
         public FilesResource.CreateMediaUpload UploadFile(DriveService service, Apis.Drive.v3.Data.File fileMetadata, IFormFile originalFile)
         {
-            using (var stream = originalFile.OpenReadStream())
-            {
-                var request = service.Files.Create(fileMetadata, stream, fileConfiguration.ContentType);
-                request.Fields = "id";
-                request.Upload();
-                return request;
-            }
+            using var stream = originalFile.OpenReadStream();
+
+            var request = service.Files.Create(fileMetadata, stream, fileConfiguration.ContentType);
+            request.Fields = "id";
+            request.Upload();
+
+            return request;
         }
 
         public async Task<Stream> ExportFileAsync(DriveService service, string fileId)
         {
             var exportRequest = service.Files.Export(fileId, fileConfiguration.OutputMimeType);
             var streamResponse = await exportRequest.ExecuteAsStreamAsync();
+
             return streamResponse;
         }
 
