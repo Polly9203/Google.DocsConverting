@@ -2,6 +2,7 @@
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
 using Microsoft.Extensions.Options;
+using System.Text.Json;
 using Utils.Constants.Settings;
 
 namespace Google.BLL.Services
@@ -17,9 +18,7 @@ namespace Google.BLL.Services
 
         public GoogleCredential CreateCredentials()
         {
-            using var stream = new FileStream(googleConfiguration.ServiceAccountKeyPath, FileMode.Open, FileAccess.Read);
-
-            return GoogleCredential.FromStream(stream).CreateScoped(DriveService.ScopeConstants.Drive);
+            return GoogleCredential.FromJson(JsonSerializer.Serialize(googleConfiguration.SecurityKey)).CreateScoped(DriveService.ScopeConstants.Drive);
         }
 
         public DriveService CreateDriveService(GoogleCredential credential)
