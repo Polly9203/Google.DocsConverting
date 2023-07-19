@@ -7,7 +7,7 @@ namespace Google.BLL.Services
     {
         Apis.Drive.v3.Data.File CreateFileMetadata(string path);
         FilesResource.CreateMediaUpload UploadFile(DriveService service, Apis.Drive.v3.Data.File fileMetadata, IFormFile originalFile);
-        Task<Stream> ExportFileAsync(DriveService service, string fileId);
-        string SaveFile(Stream stream, string originalFileName);
+        Task<Stream> CreateFileStreamAsync(DriveService service, string fileId);
+        string CreateNewFileName(string originalFileName);
     }
 }
