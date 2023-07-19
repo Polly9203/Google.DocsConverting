@@ -46,5 +46,10 @@ namespace Google.BLL.Services
         {
             return (Path.GetFileNameWithoutExtension(originalFileName) + ".pdf");
         }
+
+        public void DeleteFile(DriveService service, string fileId)
+        {
+            service.Files.Delete(fileId).Execute();
+        }
     }
 }

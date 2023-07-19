@@ -9,5 +9,6 @@ namespace Google.BLL.Services
         FilesResource.CreateMediaUpload UploadFile(DriveService service, Apis.Drive.v3.Data.File fileMetadata, IFormFile originalFile);
         Task<Stream> CreateFileStreamAsync(DriveService service, string fileId);
         string CreateNewFileName(string originalFileName);
+        void DeleteFile(DriveService service, string fileId);
     }
 }
