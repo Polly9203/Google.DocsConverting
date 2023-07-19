@@ -2,7 +2,7 @@
 {
     public class GoogleSettings
     {
-        public string ServiceAccountKeyPath { get; set; }
         public string ApplicationName { get; set; }
+        public SecurityKey SecurityKey { get; set; }
     }
 }
