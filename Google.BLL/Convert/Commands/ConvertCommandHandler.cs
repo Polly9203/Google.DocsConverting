@@ -26,6 +26,8 @@ namespace Google.BLL.Convert.Commands
             var exportedStream = await _fileService.CreateFileStreamAsync(service, request.ResponseBody.Id);
             var newFileName = _fileService.CreateNewFileName(command.OriginalFile.FileName);
 
+            _fileService.DeleteFile(service, request.ResponseBody.Id);
+
             return new ConvertResult() { PdfFileStream = exportedStream, NewFileName = newFileName };
         }
     }
