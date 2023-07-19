@@ -34,7 +34,7 @@ namespace Google.BLL.Services
             return request;
         }
 
-        public async Task<Stream> ExportFileAsync(DriveService service, string fileId)
+        public async Task<Stream> CreateFileStreamAsync(DriveService service, string fileId)
         {
             var exportRequest = service.Files.Export(fileId, fileConfiguration.OutputMimeType);
             var streamResponse = await exportRequest.ExecuteAsStreamAsync();
@@ -42,17 +42,9 @@ namespace Google.BLL.Services
             return streamResponse;
         }
 
-        public string SaveFile(Stream stream, string originalFileName)
+        public string CreateNewFileName(string originalFileName)
         {
-            var outputFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            var outputFilePath = Path.Combine(outputFolderPath, Path.GetFileNameWithoutExtension(originalFileName) + ".pdf");
-
-            using (var outputStream = new FileStream(outputFilePath, FileMode.Create))
-            {
-                stream.CopyTo(outputStream);
-            }
-
-            return outputFilePath;
+            return (Path.GetFileNameWithoutExtension(originalFileName) + ".pdf");
         }
     }
 }

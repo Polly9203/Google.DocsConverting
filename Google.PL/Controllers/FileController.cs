@@ -1,7 +1,8 @@
 ﻿using Google.BLL.Convert.Commands;
-using Google.BLL.Convert.Models;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Utils.Constants.Settings;
 
 namespace Google.PL.Controllers
 {
@@ -9,17 +10,21 @@ namespace Google.PL.Controllers
     [Route("[controller]")]
     public class FileController : BaseController
     {
-        public FileController(IMediator mediator) : base(mediator)
+        private readonly FileSettings fileConfiguration;
+
+        public FileController(IMediator mediator, IOptions<FileSettings> fileConfiguration) : base(mediator)
         {
+            this.fileConfiguration = fileConfiguration.Value;
         }
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<ConvertResult>> Convert(IFormFile original_file)
+        public async Task<ActionResult> Convert(IFormFile original_file)
         {
             var command = new ConvertCommand() { OriginalFile = original_file };
             var result = await Mediator.Send(command);
-            return Ok(result);
+
+            return File(result.PdfFileStream, fileConfiguration.OutputMimeType, result.NewFileName);
         }
     }
 }

@@ -19,14 +19,14 @@ namespace Google.BLL.Convert.Commands
         {
             var credential = _googleService.CreateCredentials();
             using var service = _googleService.CreateDriveService(credential);
-     
+
             var fileMetadata = _fileService.CreateFileMetadata(command.OriginalFile.FileName);
             var request = _fileService.UploadFile(service, fileMetadata, command.OriginalFile);
 
-            var exportedStream = await _fileService.ExportFileAsync(service, request.ResponseBody.Id);
-            var outputFilePath = _fileService.SaveFile(exportedStream, command.OriginalFile.FileName);
+            var exportedStream = await _fileService.CreateFileStreamAsync(service, request.ResponseBody.Id);
+            var newFileName = _fileService.CreateNewFileName(command.OriginalFile.FileName);
 
-            return new ConvertResult() { PdfFilePath = outputFilePath };
+            return new ConvertResult() { PdfFileStream = exportedStream, NewFileName = newFileName };
         }
     }
 }
